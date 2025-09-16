@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Engelskarten ziehen</title>
+  <style>
+    :root{
+      --beige-50:#faf6ef;
+      --beige-100:#f5efe6;
+      --beige-200:#eee5d8;
+      --beige-300:#e3d7c4;
+      --beige-400:#cebca6;
+      --beige-500:#bda88f;
+      --gold-300:#e9d8a6;
+      --gold-400:#d4b96e;
+      --gold-500:#b9972a;
+      --ink:#3b342b;
+      --muted:#6f6559;
+      --accent:#d9c4a5;
+      --shadow: 0 10px 25px rgba(60,45,26,.18), 0 3px 8px rgba(60,45,26,.12);
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Color Emoji", "Apple Color Emoji", sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 800px at 50% -10%, #fff6e8 0%, rgba(255,255,255,0) 70%),
+        radial-gradient(900px 600px at 100% 0%, rgba(233,216,166,.35), rgba(233,216,166,0) 60%),
+        linear-gradient(180deg, var(--beige-50), var(--beige-100));
+    }
+    .wrap{
+      min-height:100%;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+    }
+    header{
+      padding:20px 20px 10px;
+      text-align:center;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(1.4rem, 1rem + 1.5vw, 2rem);
+      letter-spacing:.4px;
+      font-weight:700;
+    }
+    .sub{color:var(--muted); font-size:.975rem; margin-top:.35rem}
+
+    .stage{
+      display:grid; place-items:center; padding:10px;
+    }
+
+    .card-area{ display:grid; gap:14px; justify-items:center; }
+
+    .card-scene{
+      width: min(80vw, 60vh);
+      height: min(120vw, 90vh);
+      perspective:1200px;
+    }
+
+    .card{
+      position:relative; width:100%; height:100%;
+      transform-style: preserve-3d;
+      transition: transform .8s cubic-bezier(.2,.7,.1,1);
+      border-radius:20px;
+      box-shadow: var(--shadow);
+    }
+    .card.is-flipped{ transform: rotateY(180deg); }
+
+    .side{
+      position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+      border-radius:20px; overflow:hidden;
+      display:flex; align-items:center; justify-content:center; text-align:center;
+    }
+    .front{
+      background: conic-gradient(from 180deg at 50% 0%, rgba(255,255,255,.9), rgba(255,255,255,.7)),
+                  linear-gradient(180deg, #fffaf1, var(--beige-100));
+      border:1px solid var(--beige-300);
+    }
+    .back{
+      transform: rotateY(180deg);
+      background: linear-gradient(180deg, #fffbf3, #f7efdF);
+      border:1px solid var(--beige-300);
+      padding:22px 20px 24px;
+    }
+
+    .frame{
+      position:absolute; inset:14px; border-radius:16px; padding:16px; display:grid; place-items:center;
+      background:
+        radial-gradient(220px 120px at 50% 0%, rgba(255,255,255,.7), rgba(255,255,255,0) 70%),
+        linear-gradient(180deg, rgba(217,196,165,.18), rgba(217,196,165,.06));
+      border: 1px solid rgba(185,151,42,.25);
+    }
+    .halo{
+      position:absolute; top:32px; left:50%; transform:translateX(-50%);
+      width:30%; height:auto; filter: drop-shadow(0 6px 10px rgba(185,151,42,.25));
+    }
+    .wings{
+      position:absolute; bottom:8%; left:50%; transform:translateX(-50%);
+      width: 86%; max-width: 90%; opacity:.9;
+    }
+    .sigil{
+      position:absolute; top:50%; left:50%; transform: translate(-50%,-34%);
+      font-size: clamp(1rem, 2vw, 1.8rem);
+      letter-spacing:.12em; text-transform:uppercase; color:#7b6a52;
+      background: linear-gradient(180deg,#9a8766,#6f5e46);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .subtitle{
+      position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+      font-size:.9rem; color:#8a7a64; letter-spacing:.08em;
+    }
+
+    .content{ max-width: 90%; margin:0 auto; }
+    .badge{
+      display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .7rem; border-radius:999px;
+      background: rgba(217,196,165,.25); border:1px solid rgba(185,151,42,.22);
+      font-size:.8rem; color:#6a5b47; margin-bottom:.6rem;
+    }
+    .title{ font-size:1.25rem; font-weight:800; margin:.2rem 0 .4rem; letter-spacing:.02em; }
+    .text{ font-size:1rem; line-height:1.45; color:#51473b; }
+    .affirm{ margin-top:.9rem; font-style:italic; color:#6b5c49; }
+
+    .corners:before, .corners:after{ content:""; position:absolute; width:10%; height:10%; border:2px solid rgba(185,151,42,.45); border-radius:12px; }
+    .corners:before{ top:10px; left:10px; border-right:none; border-bottom:none; }
+    .corners:after{ bottom:10px; right:10px; border-left:none; border-top:none; }
+
+    .design-1 .frame{ background: radial-gradient(260px 160px at 50% 0%, rgba(255,255,255,.8), rgba(255,255,255,0) 70%), linear-gradient(180deg, rgba(233,216,166,.22), rgba(217,196,165,.08)); }
+    .design-2 .frame{ background: radial-gradient(200px 120px at 50% 10%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%), repeating-conic-gradient(from 0deg, rgba(217,196,165,.12) 0 8deg, rgba(217,196,165,.04) 8deg 16deg); }
+    .design-3 .frame{ background: radial-gradient(260px 120px at 50% 0%, rgba(255,255,255,.8), rgba(255,255,255,0) 70%), radial-gradient(220px 180px at 50% 90%, rgba(233,216,166,.18), rgba(233,216,166,0) 60%), linear-gradient(180deg, rgba(217,196,165,.16), rgba(217,196,165,.06)); }
+
+    .actions{ display:flex; gap:12px; align-items:center; justify-content:center; }
+    button{
+      appearance:none; border:none; cursor:pointer; font-weight:700; letter-spacing:.02em;
+      padding:.6rem 1rem; border-radius:14px;
+      background: linear-gradient(180deg, #f2e6d3, #e6d6bf);
+      color:#4a4034; box-shadow: var(--shadow);
+      border:1px solid var(--beige-300);
+      transition: transform .06s ease, box-shadow .2s ease;
+    }
+    button:active{ transform: translateY(1px); box-shadow: 0 6px 14px rgba(60,45,26,.16); }
+
+    footer{ text-align:center; color:var(--muted); font-size:.85rem; padding:12px 10px 20px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Engelskarten</h1>
+      <div class="sub">Ziehe eine Karte und drehe sie um, um deine Botschaft zu lesen.</div>
+    </header>
+
+    <main class="stage">
+      <section class="card-area" aria-live="polite">
+        <div class="card-scene" aria-label="Engelskarte" role="button" tabindex="0" id="scene">
+          <div class="card design-1 corners" id="card">
+            <div class="side front">
+              <div class="frame">
+                <svg class="halo" viewBox="0 0 200 200" aria-hidden="true">
+                  <defs>
+                    <radialGradient id="gHalo" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#fff5d6"/>
+                      <stop offset="55%" stop-color="#f0e0ad"/>
+                      <stop offset="100%" stop-color="#d8bf7b"/>
+                    </radialGradient>
+                  </defs>
+                  <ellipse cx="100" cy="100" rx="72" ry="28" fill="url(#gHalo)" stroke="rgba(185,151,42,.5)" stroke-width="3"/>
+                </svg>
+                <svg class="wings" viewBox="0 0 600 220" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gWing" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#fff"/>
+                      <stop offset="100%" stop-color="#f2eadc"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M300 110c-55 0-95-35-120-70C160 10 140 5 115 20 80 42 50 72 30 110c-16 30 10 65 45 60 60-8 125-30 225-30" fill="url(#gWing)" stroke="#d9c4a5" stroke-width="2" opacity=".95"/>
+                  <path d="M300 110c55 0 95-35 120-70 20-30 40-35 65-20 35 22 65 52 85 90 16 30-10 65-45 60-60-8-125-30-225-30" fill="url(#gWing)" stroke="#d9c4a5" stroke-width="2" opacity=".95"/>
+                </svg>
+                <div class="subtitle">Tippe/Klicke zum Umdrehen</div>
+              </div>
+            </div>
+
+            <div class="side back">
+              <div class="content" id="backContent">
+                <span class="badge" id="badge">Engelsbotschaft</span>
+                <div class="title" id="title">Willkommen</div>
+                <p class="text" id="message">Ziehe eine Karte, um eine sanfte Erinnerung, Ermutigung oder klare Ausrichtung zu erhalten.</p>
+                <p class="affirm" id="affirm">Affirmation: Ich bin offen für Führung.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="drawBtn" type="button">Neue Karte ziehen</button>
+          <button id="flipBtn" type="button" aria-controls="scene">Umdrehen</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Tipp: Atme einmal tief ein & aus, bevor du drehst.
+    </footer>
+  </div>
+
+  <script>
+    const cards = [
+      { key: 'Mut', badge: 'Engel des Mutes', title: 'Sanfter Mut', message: 'Dein Herz kennt den nächsten kleinen Schritt. Mut bedeutet nicht Lautstärke, sondern Treue zu deinem inneren Flüstern.', affirm: 'Ich handle in kleinen, mutigen Schritten.' },
+      { key: 'Ruhe', badge: 'Engel der Ruhe', title: 'Stille Quelle', message: 'Im Stillsein sortiert sich alles. Erlaube dir heute Inseln ohne Leistung – dort wächst Klarheit.', affirm: 'Ich darf ausruhen, um zu strahlen.' },
+      { key: 'Vertrauen', badge: 'Engel des Vertrauens', title: 'Getragener Weg', message: 'Nicht jede Antwort ist jetzt fällig. Vertraue, dass sich Türen im richtigen Moment öffnen.', affirm: 'Ich vertraue dem Timing des Lebens.' },
+      { key: 'Freude', badge: 'Engel der Freude', title: 'Leicht wie Licht', message: 'Suche heute absichtlich das Kleine, das dich lächeln lässt. Freude ist ein Kompass.', affirm: 'Ich erlaube mir, mich zu freuen.' },
+      { key: 'Schutz', badge: 'Schutzengel', title: 'Geborgen', message: 'Du bist begleitet. Bitte innerlich um Schutz – und achte auf die leisen Impulse, die dich sicher führen.', affirm: 'Ich bin behütet auf meinem Weg.' }
+    ];
+
+    const themes = ['design-1','design-2','design-3'];
+
+    const scene = document.getElementById('scene');
+    const cardEl = document.getElementById('card');
+    const badge = document.getElementById('badge');
+    const title = document.getElementById('title');
+    const message = document.getElementById('message');
+    const affirm = document.getElementById('affirm');
+    const drawBtn = document.getElementById('drawBtn');
+    const flipBtn = document.getElementById('flipBtn');
+
+    let currentIndex = -1;
+
+    function pickRandomIndex(){
+      if(cards.length <= 1) return 0;
+      let idx;
+      do{ idx = Math.floor(Math.random()*cards.length); }while(idx === currentIndex);
+      return idx;
+    }
+
+    function applyTheme(){
+      const newTheme = themes[Math.floor(Math.random()*themes.length)];
+      themes.forEach(t => cardEl.classList.remove(t));
+      cardEl.classList.add(newTheme);
+    }
+
+    function drawCard(){
+      currentIndex = pickRandomIndex();
+      const c = cards[currentIndex];
+      cardEl.classList.remove('is-flipped');
+      badge.textContent = c.badge;
+      title.textContent = c.title;
+      message.textContent = c.message;
+      affirm.textContent = 'Affirmation: ' + c.affirm;
+      applyTheme();
+    }
+
+    function flipCard(){ cardEl.classList.toggle('is-flipped'); }
+
+    scene.addEventListener('keydown', (e)=>{
+      if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); flipCard(); }
+    });
+
+    scene.addEventListener('click', flipCard);
+
+    drawBtn.addEventListener('click', drawCard);
+    flipBtn.addEventListener('click', flipCard);
+
+    drawCard();
+  </script>
+</body>
+</html>
